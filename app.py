@@ -427,7 +427,7 @@ for i, (name, df) in enumerate(party.items()):
             f"<div class='guest'><div class='face'>{FACES[i % len(FACES)]}</div>"
             f"<div class='name'>{name}</div>"
             f"<div class='amt'>{mixer.sats_to_btc_str(total)}</div>"
-            f"<div class='sub'>{len(df)} coins</div></div>",
+            f"<div class='sub'>brought to the party</div></div>",
             unsafe_allow_html=True,
         )
 
