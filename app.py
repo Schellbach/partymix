@@ -436,7 +436,7 @@ st.write("")
 # ---------------------------------------------------------------------------
 # The button
 # ---------------------------------------------------------------------------
-if st.button("START THE PARTY", type="primary", use_container_width=True):
+if st.button("PARTY MIX!", type="primary", use_container_width=True):
     bar = st.progress(0, text="Turning on the disco lights...")
     anim = [
         "Everyone walks in with their coins",
