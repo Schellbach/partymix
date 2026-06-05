@@ -24,6 +24,19 @@ streamlit run app.py
 
 Then open the URL Streamlit prints (usually <http://localhost:8501>).
 
+## Deploy to Streamlit Community Cloud
+
+This app is ready to deploy for free on [Streamlit Community Cloud](https://share.streamlit.io):
+
+1. Go to <https://share.streamlit.io> and sign in with GitHub.
+2. Click **Create app → Deploy a public/private app from GitHub**.
+3. Pick this repo (`Schellbach/partymix`), branch `main`, main file `app.py`.
+   - Because the repo is **private**, authorize Streamlit to access it when prompted.
+4. Click **Deploy**. Streamlit installs `requirements.txt` automatically and
+   applies the theme in `.streamlit/config.toml`.
+
+That's it — you'll get a public `*.streamlit.app` URL to share.
+
 ## How to use it
 
 1. **Make a party** — in the sidebar, generate 3–8 mock guests, or drag & drop

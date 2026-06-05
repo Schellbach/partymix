@@ -1,0 +1,12 @@
+# Theme for the Shielded CSV Party Mix app.
+# Dark base with a privacy-green accent to match the on-chain "fingerprint" vibe.
+[theme]
+base = "dark"
+primaryColor = "#00e0a4"
+backgroundColor = "#0e1117"
+secondaryBackgroundColor = "#1b1f2a"
+textColor = "#fafafa"
+font = "sans serif"
+
+[browser]
+gatherUsageStats = false
