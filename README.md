@@ -1,12 +1,12 @@
 # Party Mix
 
-**Pay together. Stay private. Save fees.**
+**Mix together. Stay private. Limit fees.**
 
 [![Live demo](https://img.shields.io/badge/Live%20demo-Open%20app-00e0a4?logo=streamlit&logoColor=white)](https://partymix-cbu5hjo8qcvn8nayck9a2w.streamlit.app/)
 [![Status](https://img.shields.io/badge/status-educational%20demo-8b5cff)](#disclaimer)
 
 A fun, beginner-friendly Streamlit app that shows how a group of people can pool
-their Bitcoin coins, make **one** shared private payment, and have the outside
+their Bitcoin and make **one** shared private transaction, and have the outside
 world see only a single tiny **64-byte code** — not who brought what, how much,
 or who took home what.
 
