@@ -5,13 +5,12 @@ Run it with:
     pip install -r requirements.txt
     streamlit run app.py
 
-What this shows (in one sentence):
-    Several people throw their coins into one shared "party", the party makes a
-    single private transaction, and outsiders only ever see one tiny 64-byte
-    fingerprint -- not who brought what, how much, or who took it home.
+The idea in one sentence:
+    A group of people make ONE shared payment together, so the outside world
+    only ever sees a single tiny code -- not who paid, how much, or who got paid.
 
-This is an educational toy. The "cryptography" is faked with random hex so the
-ideas stay front-and-center. See README section at the bottom of this file.
+This is an educational toy. The "cryptography" is faked with random text so the
+ideas stay front-and-center. See the README section at the bottom of this file.
 """
 
 import time
@@ -24,489 +23,515 @@ import streamlit as st
 import mixer
 
 # ---------------------------------------------------------------------------
-# Page setup + a little styling
+# Page setup
 # ---------------------------------------------------------------------------
 st.set_page_config(
     page_title="Shielded CSV Party Mix",
-    page_icon="🎉",
+    page_icon="🪩",
     layout="wide",
 )
 
+# Brand palette -- one fun accent (teal), one playful secondary (violet),
+# one warm "watch out" color (coral) for the non-private "before" state.
+TEAL = "#00e0a4"
+VIOLET = "#8b5cff"
+CORAL = "#ff6b6b"
+BLUE = "#4c9be8"
+INK = "#0e1117"
+
 st.markdown(
-    """
+    f"""
     <style>
-    .big-null {
-        font-family: monospace;
-        font-size: 0.95rem;
-        word-break: break-all;
-        background: #0e1117;
-        color: #00e0a4;
-        padding: 0.75rem 1rem;
-        border-radius: 8px;
-        border: 1px solid #00e0a4;
-    }
-    .pill {
-        display:inline-block; padding:2px 10px; border-radius:999px;
-        background:#262730; color:#fafafa; font-size:0.75rem; margin-right:6px;
-    }
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap');
+
+    html, body, [class*="css"] {{ font-family: 'Inter', sans-serif; }}
+    h1, h2, h3, h4 {{ font-family: 'Space Grotesk', sans-serif; letter-spacing: -0.01em; }}
+
+    /* Hero banner */
+    .hero {{
+        background:
+            radial-gradient(1200px 200px at 10% -20%, rgba(139,92,255,0.35), transparent),
+            linear-gradient(135deg, {VIOLET} 0%, {TEAL} 100%);
+        padding: 2.2rem 2rem;
+        border-radius: 20px;
+        color: #0a0a0a;
+        box-shadow: 0 12px 40px rgba(0,224,164,0.15);
+        margin-bottom: 0.5rem;
+    }}
+    .hero h1 {{ font-size: 2.6rem; margin: 0 0 0.4rem 0; color: #0a0a0a; }}
+    .hero p {{ font-size: 1.15rem; margin: 0; color: #0a0a0a; opacity: 0.85; font-weight: 500; }}
+    .chips {{ margin-top: 1rem; }}
+    .chip {{
+        display:inline-block; padding:6px 14px; border-radius:999px; margin:4px 6px 0 0;
+        background: rgba(0,0,0,0.18); color:#0a0a0a; font-weight:600; font-size:0.85rem;
+    }}
+
+    /* Generic cards */
+    .card {{
+        background: #161b27; border: 1px solid #232b3d; border-radius: 16px;
+        padding: 1.1rem 1.2rem; height: 100%;
+    }}
+    .card .num {{ font-family:'Space Grotesk'; font-size:1.6rem; font-weight:700; color:{TEAL}; }}
+    .card h4 {{ margin: 0.1rem 0 0.4rem 0; }}
+    .card p {{ color:#aab2c5; font-size:0.92rem; margin:0; }}
+
+    /* Before / After comparison */
+    .cmp {{ border-radius:16px; padding:1.2rem 1.3rem; height:100%; }}
+    .cmp-before {{ background: rgba(255,107,107,0.08); border:1px solid rgba(255,107,107,0.4); }}
+    .cmp-after {{ background: rgba(0,224,164,0.08); border:1px solid rgba(0,224,164,0.45); }}
+    .cmp h3 {{ margin-top:0; }}
+    .cmp ul {{ margin:0.4rem 0 0 0; padding-left:1.1rem; color:#cdd4e2; }}
+    .cmp li {{ margin:0.35rem 0; }}
+    .tag {{ font-size:0.8rem; font-weight:700; padding:3px 10px; border-radius:999px; }}
+    .tag-bad {{ background:rgba(255,107,107,0.2); color:{CORAL}; }}
+    .tag-good {{ background:rgba(0,224,164,0.2); color:{TEAL}; }}
+
+    /* Guest cards */
+    .guest {{
+        background:#161b27; border:1px solid #232b3d; border-radius:14px;
+        padding:0.9rem 1rem; text-align:center;
+    }}
+    .guest .name {{ font-family:'Space Grotesk'; font-weight:700; font-size:1.05rem; }}
+    .guest .amt {{ color:{TEAL}; font-weight:600; }}
+    .guest .sub {{ color:#8893a7; font-size:0.8rem; }}
+
+    /* The on-chain code */
+    .big-null {{
+        font-family: 'Space Grotesk', monospace; font-size: 1rem; word-break: break-all;
+        background:{INK}; color:{TEAL}; padding:1rem 1.1rem; border-radius:12px;
+        border:1px solid {TEAL}; line-height:1.5;
+    }}
+
+    /* Make the primary button big and fun */
+    div.stButton > button[kind="primary"] {{
+        background: linear-gradient(135deg, {VIOLET}, {TEAL});
+        color:#08110d; font-weight:700; font-size:1.15rem; border:0;
+        padding:0.75rem 1rem; border-radius:14px; transition: transform .08s ease;
+    }}
+    div.stButton > button[kind="primary"]:hover {{ transform: scale(1.01); filter:brightness(1.05); }}
     </style>
     """,
     unsafe_allow_html=True,
 )
 
-# Simple, jargon-free explanations reused as tooltips throughout the app.
+# Plain-language explanations reused as tooltips.
 HELP = {
-    "nullifier": "A tiny fingerprint a coin leaves when it's spent. It proves the "
-    "coin was used without revealing which coin it was.",
-    "shielded_state": "Your own private spreadsheet of coins. It lives on your "
-    "computer -- the blockchain never sees it.",
-    "shared_account": "A temporary shared piggy bank everyone mixes into for the "
-    "party, then leaves with fresh coins.",
-    "aggregate_nullifier": "ONE 64-byte fingerprint that stands in for the whole "
-    "group's transaction. It's all the outside world gets to see.",
-    "dummy_coins": "Fake decoy coins added to the mix so the real ones are harder "
-    "to pick out -- like extra dancers on the floor.",
-    "anonymity_set": "The size of the crowd you blend into. Bigger crowd = harder "
-    "to single you out.",
-    "privacy_score": "A friendly 0-100 vibe-check of how hidden you are, based on "
-    "how big the crowd is.",
+    "shielded_state": "Each person's own private list of coins. It lives on their "
+    "computer -- the public blockchain never sees it.",
+    "aggregate_code": "ONE small 64-byte code that stands in for the whole group's "
+    "payment. It's all the outside world gets to see.",
+    "dummy_coins": "Decoy coins added to the mix so the real ones are harder to pick "
+    "out -- like extra dancers on the floor.",
+    "anonymity_set": "The size of the crowd you blend into. Bigger crowd, harder to "
+    "single you out.",
+    "privacy_score": "A friendly 0-100 read on how hidden you are, based on how big "
+    "the crowd is.",
 }
 
 # ---------------------------------------------------------------------------
 # Session state
 # ---------------------------------------------------------------------------
 if "party" not in st.session_state:
-    st.session_state.party = {}          # {name: DataFrame}
+    st.session_state.party = {}
 if "result" not in st.session_state:
-    st.session_state.result = None       # MixResult
+    st.session_state.result = None
 
 
 # ---------------------------------------------------------------------------
 # Sidebar -- controls
 # ---------------------------------------------------------------------------
 with st.sidebar:
-    st.title("🎉 Party Controls")
-    st.caption("Set up the guest list, then hit the mix button in the main area.")
+    st.header("Party controls")
+    st.caption("Set the guest list, then press the big button.")
 
-    st.subheader("1. Generate a mock party")
-    num_participants = st.slider(
-        "Number of guests", min_value=3, max_value=8, value=4,
-        help="How many people bring coins to the party.",
-    )
-    coins_per_user = st.slider(
-        "Coins each guest brings", min_value=1, max_value=5, value=3,
-        help="Each coin is one row in that person's private spreadsheet.",
-    )
-    if st.button("🎲 Generate mock guests", use_container_width=True):
+    st.subheader("1 · Make a party")
+    num_participants = st.slider("Number of guests", 3, 8, 4,
+                                 help="How many people bring coins.")
+    coins_per_user = st.slider("Coins each guest brings", 1, 5, 3,
+                               help="Each coin is one row in their private list.")
+    if st.button("Generate guests", use_container_width=True):
         st.session_state.party = mixer.generate_party(num_participants, coins_per_user)
         st.session_state.result = None
-        st.toast("Fresh guests invited!", icon="🎈")
+        st.toast("Fresh guests invited", icon="🎈")
 
     st.divider()
-    st.subheader("2. Or bring your own CSVs")
-    uploads = st.file_uploader(
-        "Drag & drop guest CSV files",
-        type=["csv"],
-        accept_multiple_files=True,
-        help=HELP["shielded_state"],
-    )
+    st.subheader("2 · Or upload CSVs")
+    uploads = st.file_uploader("Drag & drop guest CSV files", type=["csv"],
+                               accept_multiple_files=True, help=HELP["shielded_state"])
     if uploads:
         loaded = {}
         for up in uploads:
             try:
-                df = pd.read_csv(up)
-                name = up.name.replace(".csv", "")
-                loaded[name] = df
-            except Exception as exc:  # noqa: BLE001 -- show friendly error in UI
+                loaded[up.name.replace(".csv", "")] = pd.read_csv(up)
+            except Exception as exc:  # noqa: BLE001
                 st.error(f"Couldn't read {up.name}: {exc}")
         if loaded:
             st.session_state.party = loaded
             st.session_state.result = None
-            st.success(f"Loaded {len(loaded)} guest file(s).")
+            st.success(f"Loaded {len(loaded)} file(s).")
 
     st.divider()
-    st.subheader("3. Mix settings")
-    num_dummy = st.slider(
-        "Decoy coins (extra privacy)", min_value=0, max_value=10, value=2,
-        help=HELP["dummy_coins"],
-    )
+    st.subheader("3 · Privacy boost")
+    num_dummy = st.slider("Decoy coins", 0, 10, 2, help=HELP["dummy_coins"])
 
     st.divider()
-    st.caption(
-        "The party is private. No one knows who brought what. 🕶️"
-    )
+    st.caption("The party is private. No one knows who brought what.")
 
 
 # ---------------------------------------------------------------------------
-# Visualization helpers
+# Visualization helpers (no emojis -- color + shape carry the meaning)
 # ---------------------------------------------------------------------------
-def graph_before(party: dict) -> go.Figure:
-    """Each guest's spend is its own line on-chain -- fully linkable."""
-    G = nx.DiGraph()
-    for name in party:
-        G.add_node(f"👤 {name}", kind="user")
-        G.add_node(f"🔗 {name}'s tx", kind="tx")
-        G.add_edge(f"👤 {name}", f"🔗 {name}'s tx")
-
-    pos = {}
-    users = list(party.keys())
-    for i, name in enumerate(users):
-        y = 1 - (i / max(len(users) - 1, 1))
-        pos[f"👤 {name}"] = (0, y)
-        pos[f"🔗 {name}'s tx"] = (1, y)
-    return _render_network(G, pos, "Before: everyone posts their own transaction (easy to trace)")
-
-
-def graph_after(result, private_view: bool) -> go.Figure:
-    """Everyone funnels through one shared mix -> outputs can't be linked back."""
-    G = nx.DiGraph()
-    mix_node = "🌀 SHARED MIX"
-    G.add_node(mix_node, kind="mix")
-
-    for name in result.participants:
-        G.add_node(f"👤 {name}", kind="user")
-        G.add_edge(f"👤 {name}", mix_node)
-
-    for i, flow in enumerate(result.flows):
-        label = "🪙 ???" if private_view else f"🪙 out {i + 1}"
-        G.add_node(label + f"\u200b{i}", kind="out", display=label)
-        G.add_edge(mix_node, label + f"\u200b{i}")
-
-    pos = {}
-    users = result.participants
-    for i, name in enumerate(users):
-        y = 1 - (i / max(len(users) - 1, 1))
-        pos[f"👤 {name}"] = (0, y)
-    pos[mix_node] = (1, 0.5)
-    outs = [n for n, d in G.nodes(data=True) if d.get("kind") == "out"]
-    for i, n in enumerate(outs):
-        y = 1 - (i / max(len(outs) - 1, 1))
-        pos[n] = (2, y)
-
-    title = (
-        "After: one shared mix, outputs unlinkable (private view 🕶️)"
-        if private_view
-        else "After: one shared mix (peek view -- outputs shown but still shuffled)"
-    )
-    return _render_network(G, pos, title)
-
-
-def _render_network(G: nx.DiGraph, pos: dict, title: str) -> go.Figure:
-    """Shared plotly renderer for the before/after node graphs."""
-    color_map = {
-        "user": "#4c9be8",
-        "tx": "#e8714c",
-        "mix": "#a64ce8",
-        "out": "#00e0a4",
-    }
-
+def _render_network(G, pos, title, legend):
+    color_map = {"user": BLUE, "tx": CORAL, "mix": VIOLET, "out": TEAL}
     edge_x, edge_y = [], []
     for a, b in G.edges():
         edge_x += [pos[a][0], pos[b][0], None]
         edge_y += [pos[a][1], pos[b][1], None]
-
-    edge_trace = go.Scatter(
-        x=edge_x, y=edge_y, mode="lines",
-        line=dict(width=1.2, color="#888"), hoverinfo="none",
-    )
-
-    node_x, node_y, text, colors = [], [], [], []
+    edge_trace = go.Scatter(x=edge_x, y=edge_y, mode="lines",
+                            line=dict(width=1.4, color="#3a4258"), hoverinfo="none")
+    node_x, node_y, text, colors, sizes = [], [], [], [], []
     for n, d in G.nodes(data=True):
-        node_x.append(pos[n][0])
-        node_y.append(pos[n][1])
-        text.append(d.get("display", n))
-        colors.append(color_map.get(d.get("kind"), "#cccccc"))
-
+        node_x.append(pos[n][0]); node_y.append(pos[n][1])
+        text.append(d.get("display", n)); colors.append(color_map.get(d.get("kind"), "#ccc"))
+        sizes.append(34 if d.get("kind") == "mix" else 22)
     node_trace = go.Scatter(
-        x=node_x, y=node_y, mode="markers+text",
-        text=text, textposition="middle right",
-        marker=dict(size=22, color=colors, line=dict(width=1, color="#222")),
+        x=node_x, y=node_y, mode="markers+text", text=text, textposition="bottom center",
+        textfont=dict(size=12, color="#cdd4e2"),
+        marker=dict(size=sizes, color=colors, line=dict(width=1.5, color="#0e1117")),
         hoverinfo="text",
     )
-
     fig = go.Figure(data=[edge_trace, node_trace])
     fig.update_layout(
-        title=title,
-        showlegend=False,
-        margin=dict(l=10, r=10, t=40, b=10),
-        height=420,
-        xaxis=dict(visible=False, range=[-0.3, 2.6]),
-        yaxis=dict(visible=False, range=[-0.2, 1.2]),
-        plot_bgcolor="rgba(0,0,0,0)",
+        title=dict(text=title, font=dict(size=15)),
+        showlegend=False, margin=dict(l=10, r=10, t=42, b=10), height=430,
+        xaxis=dict(visible=False, range=[-0.4, 2.7]),
+        yaxis=dict(visible=False, range=[-0.35, 1.25]),
+        plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)",
+        annotations=[dict(text=legend, x=0, y=1.18, xref="paper", yref="paper",
+                          showarrow=False, font=dict(size=11, color="#8893a7"), align="left")],
     )
     return fig
 
 
-def sankey_flow(result, private_view: bool) -> go.Figure:
-    """Sankey: guests -> shared mix -> output coins (ownership obscured)."""
+def graph_before(party):
+    G = nx.DiGraph()
+    for name in party:
+        G.add_node(f"u:{name}", kind="user", display=name)
+        G.add_node(f"t:{name}", kind="tx", display="payment")
+        G.add_edge(f"u:{name}", f"t:{name}")
+    pos, users = {}, list(party.keys())
+    for i, name in enumerate(users):
+        y = 1 - (i / max(len(users) - 1, 1))
+        pos[f"u:{name}"] = (0, y); pos[f"t:{name}"] = (1.4, y)
+    return _render_network(G, pos, "Without the party: one public trail per person",
+                           "Blue = person   ·   Coral = their own public payment")
+
+
+def graph_after(result, private_view):
+    G = nx.DiGraph()
+    mix = "mix"
+    G.add_node(mix, kind="mix", display="SHARED MIX")
+    for name in result.participants:
+        G.add_node(f"u:{name}", kind="user", display=name)
+        G.add_edge(f"u:{name}", mix)
+    for i, _flow in enumerate(result.flows):
+        label = "?" if private_view else f"coin {i+1}"
+        G.add_node(f"o:{i}", kind="out", display=label)
+        G.add_edge(mix, f"o:{i}")
+    pos, users = {}, result.participants
+    for i, name in enumerate(users):
+        pos[f"u:{name}"] = (0, 1 - (i / max(len(users) - 1, 1)))
+    pos[mix] = (1.35, 0.5)
+    outs = [n for n, d in G.nodes(data=True) if d.get("kind") == "out"]
+    for i, n in enumerate(outs):
+        pos[n] = (2.4, 1 - (i / max(len(outs) - 1, 1)))
+    return _render_network(
+        G, pos,
+        "With the party: one shared mix, outputs can't be traced",
+        "Everyone flows through the same mix, so inputs and outputs can't be linked",
+    )
+
+
+def sankey_flow(result, private_view):
     participants = result.participants
-    labels = [f"👤 {p}" for p in participants] + ["🌀 SHARED MIX"]
+    labels = [p for p in participants] + ["SHARED MIX"]
     mix_idx = len(participants)
-
     out_start = len(labels)
-    for i, flow in enumerate(result.flows):
-        labels.append("🪙 ???" if private_view else f"🪙 coin {i + 1}")
-
-    src, tgt, val = [], [], []
-    # Guests -> mix
+    for i, _flow in enumerate(result.flows):
+        labels.append("?" if private_view else f"coin {i+1}")
     p_index = {p: i for i, p in enumerate(participants)}
+    src, tgt, val = [], [], []
     for flow in result.flows:
-        amt = max(flow["amount_sats"], 1)  # keep tiny/decoy links visible
-        src.append(p_index.get(flow["from"], 0))
-        tgt.append(mix_idx)
-        val.append(amt)
-    # Mix -> outputs
+        src.append(p_index.get(flow["from"], 0)); tgt.append(mix_idx)
+        val.append(max(flow["amount_sats"], 1))
     for i, flow in enumerate(result.flows):
-        amt = max(flow["amount_sats"], 1)
-        src.append(mix_idx)
-        tgt.append(out_start + i)
-        val.append(amt)
+        src.append(mix_idx); tgt.append(out_start + i)
+        val.append(max(flow["amount_sats"], 1))
+    node_colors = [BLUE] * len(participants) + [VIOLET] + [TEAL] * len(result.flows)
+    fig = go.Figure(go.Sankey(
+        node=dict(label=labels, pad=16, thickness=16, color=node_colors,
+                  line=dict(color="#0e1117", width=0.5)),
+        link=dict(source=src, target=tgt, value=val, color="rgba(139,92,255,0.28)"),
+    ))
+    fig.update_layout(title="Money goes in, gets scrambled in the mix, comes out fresh",
+                      height=440, margin=dict(l=10, r=10, t=42, b=10),
+                      paper_bgcolor="rgba(0,0,0,0)", font=dict(color="#cdd4e2"))
+    return fig
 
-    fig = go.Figure(
-        go.Sankey(
-            node=dict(label=labels, pad=15, thickness=16,
-                      color="#4c9be8", line=dict(color="#222", width=0.5)),
-            link=dict(source=src, target=tgt, value=val,
-                      color="rgba(166,76,232,0.35)"),
-        )
-    )
-    fig.update_layout(
-        title="Coin flow: in through guests, scrambled in the mix, out as fresh coins",
-        height=440, margin=dict(l=10, r=10, t=40, b=10),
-    )
+
+def privacy_gauge(score):
+    fig = go.Figure(go.Indicator(
+        mode="gauge+number", value=score, number=dict(suffix="/100", font=dict(size=34)),
+        title=dict(text="Privacy score", font=dict(size=15)),
+        gauge=dict(
+            axis=dict(range=[0, 100], tickcolor="#8893a7"),
+            bar=dict(color=TEAL),
+            bgcolor="rgba(0,0,0,0)",
+            steps=[dict(range=[0, 40], color="rgba(255,107,107,0.25)"),
+                   dict(range=[40, 70], color="rgba(139,92,255,0.25)"),
+                   dict(range=[70, 100], color="rgba(0,224,164,0.25)")],
+        ),
+    ))
+    fig.update_layout(height=240, margin=dict(l=20, r=20, t=50, b=10),
+                      paper_bgcolor="rgba(0,0,0,0)", font=dict(color="#cdd4e2"))
     return fig
 
 
 # ---------------------------------------------------------------------------
-# Main area
+# Hero
 # ---------------------------------------------------------------------------
-st.title("🎉 Shielded CSV Party Mix")
 st.markdown(
-    "**Throw a coin party. Leave with privacy.** Several people pool their coins, "
-    "make *one* shared private transaction, and the outside world only ever sees a "
-    "single tiny fingerprint -- not who brought what or who took home what."
+    """
+    <div class="hero">
+      <h1>Shielded CSV Party Mix</h1>
+      <p>Pay together. Stay private. Save fees.</p>
+      <div class="chips">
+        <span class="chip">Group up</span>
+        <span class="chip">One shared payment</span>
+        <span class="chip">One tiny public code</span>
+      </div>
+    </div>
+    """,
+    unsafe_allow_html=True,
 )
 
-with st.expander("🧠 New here? 30-second explainer (no jargon)"):
-    st.markdown(
-        """
-        - Normally, **every spend leaves its own trail** on Bitcoin. Anyone can
-          follow the money.
-        - **Shielded CSV** keeps your coin details on *your* computer. The only
-          thing posted publicly is a **64-byte fingerprint** (a *nullifier*).
-        - The **Party Mix** lets a group combine their spends into **one** shared
-          transaction. Result:
-            1. **Cheaper** -- one fingerprint instead of many.
-            2. **More private** -- outsiders can't tell whose coin is whose.
-        - We add optional **decoy coins** to make the crowd even bigger. 🕺
-        """
+# How it works -- three plain cards
+hc = st.columns(3)
+steps = [
+    ("1", "Everyone brings coins", "Each guest has a private list of coins on their own device."),
+    ("2", "Make one payment together", "All the coins go into a shared mix and come out shuffled."),
+    ("3", "The public sees one code", "Outsiders get a single 64-byte code. No names. No amounts."),
+]
+for col, (n, title, body) in zip(hc, steps):
+    col.markdown(
+        f"<div class='card'><div class='num'>{n}</div><h4>{title}</h4><p>{body}</p></div>",
+        unsafe_allow_html=True,
     )
 
-party = st.session_state.party
+st.write("")
 
+party = st.session_state.party
 if not party:
-    st.info("👈 Start by generating mock guests or uploading CSVs in the sidebar.")
+    st.info("Start by generating guests or uploading CSVs in the sidebar on the left.")
     st.stop()
 
-# --- Participant overview ---
-st.header("👥 Guest list")
-st.caption("Each guest brings a private spreadsheet of coins (their *shielded state*).")
-
-cols = st.columns(min(len(party), 4))
+# ---------------------------------------------------------------------------
+# Guest list
+# ---------------------------------------------------------------------------
+st.subheader("Guest list")
+st.caption("Each guest brings a private list of coins (only they can see the details).")
+gcols = st.columns(min(len(party), 4))
 for i, (name, df) in enumerate(party.items()):
-    col = cols[i % len(cols)]
-    with col:
-        total = int(df["amount_sats"].sum()) if "amount_sats" in df else 0
-        coins = len(df)
-        st.metric(f"👤 {name}", mixer.sats_to_btc_str(total), f"{coins} coins")
+    total = int(df["amount_sats"].sum()) if "amount_sats" in df else 0
+    with gcols[i % len(gcols)]:
+        st.markdown(
+            f"<div class='guest'><div class='name'>{name}</div>"
+            f"<div class='amt'>{mixer.sats_to_btc_str(total)}</div>"
+            f"<div class='sub'>{len(df)} coins</div></div>",
+            unsafe_allow_html=True,
+        )
 
-with st.expander("🔍 Peek at each guest's private spreadsheet"):
+with st.expander("Peek at each guest's private list"):
     for name, df in party.items():
-        st.markdown(f"**👤 {name}** — `{HELP['shielded_state']}`")
+        st.markdown(f"**{name}**")
         st.dataframe(df, use_container_width=True, hide_index=True)
 
-# --- The mix button ---
-st.header("🌀 Start the mix")
-st.caption(f"Decoy coins set to **{num_dummy}** (more decoys = bigger crowd to hide in).")
+# ---------------------------------------------------------------------------
+# Mix CTA
+# ---------------------------------------------------------------------------
+st.write("")
+st.subheader("Run the mix")
+st.caption(f"Decoy coins: {num_dummy}  ·  more decoys = a bigger crowd to hide in.")
 
-if st.button("✨ MIX THE PARTY ✨", type="primary", use_container_width=True):
-    progress = st.progress(0, text="Inviting coins into the shared account...")
-    steps = [
-        "Opening a shared account 🪩",
-        "Collecting everyone's coins 🪙",
-        "Shuffling + scrambling ownership 🔀",
-        "Sprinkling in decoy coins 🎭",
-        "Doing the zk magic + signature aggregation 🪄",
-        "Posting ONE 64-byte fingerprint on-chain 📡",
+if st.button("Mix the party", type="primary", use_container_width=True):
+    progress = st.progress(0, text="Opening a shared account...")
+    steps_anim = [
+        "Opening a shared account",
+        "Collecting everyone's coins",
+        "Shuffling and hiding who owns what",
+        "Adding decoy coins",
+        "Combining everything into one payment",
+        "Posting one small code to the chain",
     ]
-    for i, label in enumerate(steps):
-        time.sleep(0.45)
-        progress.progress(int((i + 1) / len(steps) * 100), text=label)
+    for i, label in enumerate(steps_anim):
+        time.sleep(0.4)
+        progress.progress(int((i + 1) / len(steps_anim) * 100), text=label)
     st.session_state.result = mixer.run_party_mix(party, num_dummy_coins=num_dummy)
     progress.empty()
     st.balloons()
-    st.toast("Party mixed! Everyone left private. 🕶️", icon="🎉")
+    st.toast("Mixed. Everyone left private.", icon="✅")
 
 result = st.session_state.result
 
 # ---------------------------------------------------------------------------
-# Results dashboard
+# Results
 # ---------------------------------------------------------------------------
 if result is not None:
-    st.header("📊 Results dashboard")
-
     m = result.metrics
-    c1, c2, c3, c4 = st.columns(4)
-    c1.metric("On-chain bytes saved", f"{m['bytes_saved']} B", f"-{m['pct_saved']}%",
-              help="One shared fingerprint instead of one per person.")
-    c2.metric("Fingerprints on-chain", f"{m['nullifiers_after']}",
-              f"was {m['nullifiers_before']}",
-              help=HELP["aggregate_nullifier"])
-    c3.metric("Crowd size (hide-in)", f"{m['anonymity_set']}",
-              help=HELP["anonymity_set"])
-    c4.metric("Privacy score", f"{m['privacy_score']}/100",
-              help=HELP["privacy_score"])
+    n_people = len(result.participants)
 
-    st.progress(m["privacy_score"] / 100, text=f"Privacy vibe: {m['privacy_score']}/100")
+    st.write("")
+    st.subheader("What just happened")
 
-    tabs = st.tabs([
-        "🔗 Before vs After", "🌊 Coin flow", "📡 On-chain view",
-        "📁 Joint CSV", "⬇️ Downloads",
-    ])
+    # The obvious value: side-by-side before vs after.
+    b, a = st.columns(2)
+    b.markdown(
+        f"""
+        <div class="cmp cmp-before">
+          <span class="tag tag-bad">WITHOUT THE PARTY</span>
+          <h3>Easy to follow</h3>
+          <ul>
+            <li><b>{m['nullifiers_before']}</b> separate public payments</li>
+            <li><b>{m['bytes_before']} bytes</b> posted on-chain</li>
+            <li>Anyone can trace each coin to a person</li>
+          </ul>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    a.markdown(
+        f"""
+        <div class="cmp cmp-after">
+          <span class="tag tag-good">WITH THE PARTY</span>
+          <h3>Private &amp; cheap</h3>
+          <ul>
+            <li><b>1</b> shared payment for {n_people} people</li>
+            <li><b>{m['bytes_after']} bytes</b> on-chain ({m['pct_saved']}% less)</li>
+            <li>No one can tell who paid whom</li>
+          </ul>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
-    # --- Tab 1: transaction graphs ---
+    st.write("")
+    k1, k2, k3 = st.columns([1, 1, 1.2])
+    with k1:
+        st.metric("On-chain bytes saved", f"{m['bytes_saved']} B", f"-{m['pct_saved']}%")
+        st.metric("Public codes", f"{m['nullifiers_after']}", f"was {m['nullifiers_before']}",
+                  help=HELP["aggregate_code"])
+    with k2:
+        st.metric("Crowd you hide in", f"{m['anonymity_set']}", help=HELP["anonymity_set"])
+        st.metric("Decoy coins", f"{m['num_dummy_coins']}", help=HELP["dummy_coins"])
+    with k3:
+        st.plotly_chart(privacy_gauge(m["privacy_score"]), use_container_width=True,
+                        config={"displayModeBar": False})
+
+    st.write("")
+    tabs = st.tabs(["Before vs After", "Coin flow", "Public view", "The shared record", "Downloads"])
+
     with tabs[0]:
-        private_view = st.toggle(
-            "🕶️ Private view (hide output details)", value=True,
-            help="On = what outsiders see. Off = peek behind the curtain.",
-        )
-        gcol1, gcol2 = st.columns(2)
-        with gcol1:
-            st.plotly_chart(graph_before(party), use_container_width=True)
-            st.caption("😬 Separate transactions are easy to follow coin-by-coin.")
-        with gcol2:
-            st.plotly_chart(graph_after(result, private_view), use_container_width=True)
-            st.caption("😎 One shared mix breaks the link between who paid and who got paid.")
+        private_view = st.toggle("Private view (hide output details)", value=True,
+                                 help="On = what outsiders see. Off = peek behind the curtain.")
+        g1, g2 = st.columns(2)
+        with g1:
+            st.plotly_chart(graph_before(party), use_container_width=True,
+                            config={"displayModeBar": False})
+            st.caption("Separate payments are easy to follow, coin by coin.")
+        with g2:
+            st.plotly_chart(graph_after(result, private_view), use_container_width=True,
+                            config={"displayModeBar": False})
+            st.caption("One shared mix breaks the link between payer and receiver.")
 
-    # --- Tab 2: Sankey ---
     with tabs[1]:
-        private_view2 = st.toggle(
-            "🕶️ Hide which coin is which", value=True, key="sankey_priv",
-        )
-        st.plotly_chart(sankey_flow(result, private_view2), use_container_width=True)
-        st.caption(
-            "Money flows left to right, but it all passes through the same mix -- "
-            "so you can't trace a single guest to a single output."
-        )
+        pv = st.toggle("Hide which coin is which", value=True, key="sankey_priv")
+        st.plotly_chart(sankey_flow(result, pv), use_container_width=True,
+                        config={"displayModeBar": False})
+        st.caption("Everything passes through the same mix, so no single guest "
+                   "can be traced to a single output.")
 
-    # --- Tab 3: on-chain view ---
     with tabs[2]:
-        st.subheader("What the whole world actually sees")
-        st.caption(HELP["aggregate_nullifier"])
-        st.markdown(
-            f"<div class='big-null'>{result.aggregate_nullifier}</div>",
-            unsafe_allow_html=True,
-        )
-        st.markdown(
-            f"<span class='pill'>64 bytes</span>"
-            f"<span class='pill'>{m['anonymity_set']}-way mix</span>"
-            f"<span class='pill'>{result.num_dummy_coins} decoys</span>",
-            unsafe_allow_html=True,
-        )
+        st.markdown("#### What the whole world actually sees")
+        st.caption(HELP["aggregate_code"])
+        st.markdown(f"<div class='big-null'>{result.aggregate_nullifier}</div>",
+                    unsafe_allow_html=True)
         st.write("")
-        if st.button("📡 Publish to mock Bitcoin", use_container_width=True):
-            log = st.empty()
-            shown = []
+        if st.button("Publish to mock Bitcoin", use_container_width=True):
+            log, shown = st.empty(), []
             for line in result.onchain_log:
                 shown.append(line)
                 log.code("\n".join(shown), language="text")
                 time.sleep(0.5)
-            st.success("Published! Outsiders learned almost nothing. 🤫")
-        st.info(
-            f"That's it. No amounts, no names, no balances -- just **64 bytes** "
-            f"standing in for **{len(result.participants)} people** and "
-            f"**{len(result.flows)} coins**."
-        )
+            st.success("Published. Outsiders learned almost nothing.")
+        st.info(f"That's it: **64 bytes** standing in for **{n_people} people** and "
+                f"**{len(result.flows)} coins**. No amounts, names, or balances.")
 
-    # --- Tab 4: joint CSV ---
     with tabs[3]:
-        st.subheader("The merged Joint Shielded CSV")
-        st.caption("The shared transaction record. Amounts shown here are private to "
-                   "the party; outsiders never see this table.")
+        st.markdown("#### The shared payment record")
+        st.caption("Only the party can see this. Outsiders never get this table.")
         show = result.joint_csv.copy()
         show["amount"] = show["amount_sats"].apply(mixer.sats_to_btc_str)
-        st.dataframe(
-            show[["shared_account_id", "output_commitment", "amount", "is_decoy", "proof_hash"]],
-            use_container_width=True, hide_index=True,
-        )
+        st.dataframe(show[["shared_account_id", "output_commitment", "amount",
+                           "is_decoy", "proof_hash"]],
+                     use_container_width=True, hide_index=True)
 
-    # --- Tab 5: downloads ---
     with tabs[4]:
-        st.subheader("Take the receipts home")
-        st.download_button(
-            "⬇️ Joint Shielded CSV",
-            data=mixer.df_to_csv_bytes(result.joint_csv),
-            file_name="joint_shielded_tx.csv",
-            mime="text/csv",
-            use_container_width=True,
-        )
-        st.write("**Updated guest spreadsheets (old coins spent, fresh coins added):**")
-        dl_cols = st.columns(min(len(result.updated_states), 4))
+        st.markdown("#### Take the receipts home")
+        st.download_button("Joint shared record (CSV)",
+                           data=mixer.df_to_csv_bytes(result.joint_csv),
+                           file_name="joint_shielded_tx.csv", mime="text/csv",
+                           use_container_width=True)
+        st.write("**Updated guest lists (old coins spent, fresh coins added):**")
+        dl = st.columns(min(len(result.updated_states), 4))
         for i, (name, df) in enumerate(result.updated_states.items()):
-            with dl_cols[i % len(dl_cols)]:
-                st.download_button(
-                    f"⬇️ {name}",
-                    data=mixer.df_to_csv_bytes(df),
-                    file_name=f"{name}_updated_state.csv",
-                    mime="text/csv",
-                    use_container_width=True,
-                    key=f"dl_{name}",
-                )
+            with dl[i % len(dl)]:
+                st.download_button(name, data=mixer.df_to_csv_bytes(df),
+                                   file_name=f"{name}_updated_state.csv", mime="text/csv",
+                                   use_container_width=True, key=f"dl_{name}")
 
 st.divider()
-st.caption(
-    "🔐 Educational demo only. The cryptography here is faked with random hex so "
-    "the ideas stay simple. Real Shielded CSV does the heavy lifting with actual "
-    "zero-knowledge proofs."
-)
+st.caption("Educational demo only. The cryptography here is faked with random text "
+           "so the ideas stay simple. Real Shielded CSV does the heavy lifting with "
+           "actual zero-knowledge proofs.")
 
 # ===========================================================================
-# README (how to run + the novel idea, in plain words)
+# README -- how to run + the novel idea, in plain words
 # ===========================================================================
 """
 SHIELDED CSV PARTY MIX -- README
 ================================
 
 HOW TO RUN
-----------
     pip install -r requirements.txt
     streamlit run app.py
-
 Then open the URL Streamlit prints (usually http://localhost:8501).
 
 WHAT IT DOES
-------------
-1. Generate (or upload) 3-8 guests, each with a private "shielded state" CSV of
-   coins.
-2. Click "MIX THE PARTY". The app pools everyone's coins into one shared account,
-   shuffles ownership, sprinkles in optional decoy coins, and produces ONE joint
-   private transaction.
-3. The only thing "posted on-chain" is a single 64-byte fingerprint (nullifier).
-4. Explore the dashboard: before/after graphs, a coin-flow Sankey, the on-chain
-   view, the merged CSV, and downloads.
+1. Generate (or upload) 3-8 guests, each with a private list of coins.
+2. Click "Mix the party". Everyone's coins pool into one shared account,
+   ownership gets shuffled, optional decoy coins are added, and the group makes
+   ONE shared private payment.
+3. The only thing posted publicly is a single 64-byte code.
+4. Explore the dashboard: before/after, coin flow, the public view, the shared
+   record, and downloads.
 
 THE NOVEL MIXING IDEA (in plain words)
---------------------------------------
-Shielded CSV already shrinks each spend down to a tiny 64-byte fingerprint and
-keeps all the real details (amounts, owners, balances) on your own computer.
-
-The "Party Mix" takes that one step further: instead of each person making their
-own private spend, a GROUP makes a SINGLE shared spend together. Because all the
+Shielded CSV already shrinks each payment down to a tiny 64-byte code and keeps
+the real details (amounts, owners, balances) on your own computer. The Party Mix
+goes further: a GROUP makes a SINGLE shared payment together. Because all the
 inputs and outputs live inside one transaction:
-  - You only pay for ONE fingerprint on-chain (cheaper for everyone).
+  - You only pay for ONE code on-chain (cheaper for everyone).
   - Outsiders can't link any input to any output (better privacy).
   - Adding decoy coins grows the crowd you blend into.
-
-It's a CoinJoin-style mixer reimagined for Shielded CSV: shared accounts +
-combined fingerprints = strong privacy at a fraction of the on-chain footprint.
+It's a CoinJoin-style mixer reimagined for Shielded CSV.
 """
