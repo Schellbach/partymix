@@ -4,8 +4,8 @@
 base = "dark"
 primaryColor = "#f7931a"
 backgroundColor = "#0e1117"
-secondaryBackgroundColor = "#1c1206"
-textColor = "#fafafa"
+secondaryBackgroundColor = "#1e293b"
+textColor = "#f1f5f9"
 font = "sans serif"
 
 [browser]

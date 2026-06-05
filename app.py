@@ -39,11 +39,14 @@ def img_data_uri(path: str) -> str:
 # ---------------------------------------------------------------------------
 st.set_page_config(page_title="Party Mix", page_icon="🪩", layout="wide")
 
-# All-orange Bitcoin palette: every accent is a shade of orange, light to dark.
-ORANGE = "#f7931a"   # primary Bitcoin orange
-PINK = "#c2660a"     # deep burnt orange (kept the name to avoid churn)
-PURPLE = "#ffb24d"   # amber
-TEAL = "#ffcf7a"     # light gold
+# Clean dark UI with Bitcoin orange as the single accent (legacy names kept).
+ORANGE = "#f7931a"   # primary accent
+PURPLE = "#ffb24d"   # light orange (secondary accent)
+TEAL = "#ffcf7a"     # soft gold
+PINK = "#94a3b8"     # neutral slate-gray for the "old / loud" side
+CARD = "#1e293b"     # cool slate card surface
+BORDER = "#334155"   # subtle slate borders
+TXT2 = "#94a3b8"     # secondary text
 INK = "#0e1117"
 
 st.markdown(
@@ -54,97 +57,98 @@ st.markdown(
     html, body, [class*="css"] {{ font-family:'Poppins', sans-serif; }}
     h1,h2,h3,h4 {{ font-family:'Poppins', sans-serif; font-weight:700; }}
 
-    /* ---- Hero / disco banner ---- */
+    /* ---- Hero ---- */
     .hero {{
         position:relative; overflow:hidden;
         background:
-          radial-gradient(620px 300px at 12% -10%, rgba(247,147,26,0.42), transparent 60%),
-          radial-gradient(620px 300px at 88% 0%, rgba(255,170,70,0.32), transparent 60%),
-          radial-gradient(620px 320px at 50% 130%, rgba(194,102,10,0.40), transparent 60%),
-          linear-gradient(160deg, #1c1206, #0d0b09);
-        border:1px solid #3a2a18; border-radius:26px; padding:2.4rem 2rem 2.1rem;
-        margin-bottom:1.1rem; box-shadow:0 18px 60px rgba(247,147,26,0.14);
+          radial-gradient(760px 340px at 14% -25%, rgba(247,147,26,0.20), transparent 60%),
+          radial-gradient(520px 300px at 96% -10%, rgba(247,147,26,0.09), transparent 55%),
+          linear-gradient(160deg, #1b2433, #0e1117);
+        border:1px solid {BORDER}; border-radius:24px; padding:2.4rem 2rem 2.1rem;
+        margin-bottom:1.2rem; box-shadow:0 16px 50px rgba(0,0,0,0.45);
     }}
-    .brand {{ display:flex; align-items:center; gap:1.2rem; }}
+    .brand {{ display:flex; align-items:center; gap:1.4rem; }}
     .coin {{
         width:92px; height:92px; border-radius:50%; flex:0 0 auto;
-        background: radial-gradient(circle at 32% 28%, #ffd98a, {ORANGE} 55%, #b96a05);
-        color:#3a2200; font-family:'Bungee', cursive; font-size:3.2rem;
+        background: radial-gradient(circle at 32% 28%, #ffc46a, {ORANGE} 55%, #c2410c);
+        color:#1a1a1a; font-family:'Bungee', cursive; font-size:3.2rem;
         display:flex; align-items:center; justify-content:center;
-        box-shadow:0 0 42px rgba(247,147,26,0.65);
+        box-shadow:0 8px 26px rgba(247,147,26,0.40);
     }}
     .bowl {{
-        width:150px; height:150px; border-radius:50%; object-fit:cover; flex:0 0 auto;
-        border:3px solid {ORANGE}; box-shadow:0 0 46px rgba(247,147,26,0.55);
+        width:148px; height:148px; border-radius:50%; object-fit:cover; flex:0 0 auto;
+        border:3px solid {ORANGE};
+        box-shadow:0 0 0 6px rgba(247,147,26,0.10), 0 12px 30px rgba(0,0,0,0.55);
     }}
-    @media (max-width: 640px) {{ .bowl {{ width:110px; height:110px; }} }}
+    @media (max-width: 640px) {{ .bowl {{ width:108px; height:108px; }} }}
     .wordmark {{
         font-family:'Bungee', cursive; font-size:clamp(2.8rem, 7vw, 4.6rem);
         line-height:0.95; margin:0;
-        background:linear-gradient(90deg,{ORANGE},{PINK},{PURPLE},{TEAL},{ORANGE});
-        background-size:300% auto; -webkit-background-clip:text; background-clip:text;
-        -webkit-text-fill-color:transparent; animation:shine 6s linear infinite;
+        background:linear-gradient(92deg, #ffd089, {ORANGE} 55%, #ff8a00);
+        -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
     }}
-    @keyframes shine {{ to {{ background-position:300% center; }} }}
-    .tagline {{ color:#fff4e6; font-size:1.25rem; font-weight:600; margin:0.5rem 0 0; }}
-    .subline {{ color:#e8c6a0; font-size:0.95rem; margin:0.15rem 0 0; }}
+    .tagline {{ color:#f3f5f8; font-size:1.2rem; font-weight:600; margin:0.55rem 0 0; }}
+    .subline {{ color:{TXT2}; font-size:0.95rem; margin:0.2rem 0 0; }}
 
-    /* ---- Big analogy callout ---- */
+    /* ---- Analogy callout ---- */
     .analogy {{
-        background:linear-gradient(135deg, rgba(247,147,26,0.14), rgba(255,170,70,0.10));
-        border:1px dashed {ORANGE}; border-radius:18px; padding:1.1rem 1.3rem;
-        font-size:1.1rem; color:#ffe9cf; line-height:1.5;
+        background:{CARD}; border:1px solid {BORDER}; border-left:4px solid {ORANGE};
+        border-radius:14px; padding:1.1rem 1.3rem; font-size:1.06rem;
+        color:#e2e8f0; line-height:1.55;
     }}
     .analogy b {{ color:{ORANGE}; }}
 
     /* ---- Step cards ---- */
-    .step {{ background:#1a120b; border:1px solid #3a2a18; border-radius:18px;
-            padding:1.1rem 1.1rem 1.2rem; height:100%; text-align:center; }}
-    .step .ic {{ font-family:'Bungee',cursive; font-size:1.6rem; width:54px; height:54px;
+    .step {{ background:{CARD}; border:1px solid {BORDER}; border-radius:16px;
+            padding:1.2rem 1.1rem; height:100%; text-align:center; }}
+    .step .ic {{ font-family:'Bungee',cursive; font-size:1.45rem; width:52px; height:52px;
                 border-radius:50%; display:flex; align-items:center; justify-content:center;
-                margin:0 auto 0.6rem; color:#2a1605; }}
-    .step h4 {{ margin:0 0 0.3rem; font-size:1.05rem; }}
-    .step p {{ margin:0; color:#cbb89f; font-size:0.9rem; }}
+                margin:0 auto 0.7rem; color:#1a1a1a; }}
+    .step h4 {{ margin:0 0 0.35rem; font-size:1.05rem; color:#f1f5f9; }}
+    .step p {{ margin:0; color:{TXT2}; font-size:0.9rem; }}
 
     /* ---- Guest cards ---- */
-    .guest {{ background:#1a120b; border:1px solid #3a2a18; border-radius:16px;
+    .guest {{ background:{CARD}; border:1px solid {BORDER}; border-radius:14px;
              padding:0.9rem 0.6rem; text-align:center; }}
     .guest .face {{ font-size:1.9rem; }}
-    .guest .name {{ font-weight:700; font-size:0.98rem; margin-top:0.2rem; }}
-    .guest .amt {{ color:{ORANGE}; font-weight:700; font-size:0.92rem; }}
-    .guest .sub {{ color:#b29a7e; font-size:0.78rem; }}
+    .guest .name {{ font-weight:700; font-size:0.98rem; margin-top:0.2rem; color:#f1f5f9; }}
+    .guest .amt {{ color:{ORANGE}; font-weight:700; font-size:0.95rem; margin-top:0.15rem; }}
+    .guest .sub {{ color:{TXT2}; font-size:0.78rem; }}
 
-    /* ---- Verdict (before/after) -- darker burnt orange vs bright orange ---- */
-    .verdict {{ border-radius:18px; padding:1.3rem 1.4rem; height:100%; }}
-    .v-before {{ background:rgba(194,102,10,0.10); border:1px solid rgba(194,102,10,0.50); }}
-    .v-after  {{ background:rgba(247,147,26,0.10); border:1px solid rgba(247,147,26,0.55); }}
-    .verdict .lbl {{ font-size:0.8rem; font-weight:700; letter-spacing:0.06em; }}
-    .verdict .ans {{ font-family:'Bungee',cursive; font-size:2rem; margin:0.2rem 0 0.5rem; }}
+    /* ---- Verdict: neutral 'before' vs orange 'after' ---- */
+    .verdict {{ border-radius:16px; padding:1.3rem 1.4rem; height:100%;
+               background:{CARD}; border:1px solid {BORDER}; }}
+    .v-after {{ border-color:rgba(247,147,26,0.55);
+               background:linear-gradient(135deg, rgba(247,147,26,0.10), rgba(247,147,26,0.02)); }}
+    .verdict .lbl {{ font-size:0.78rem; font-weight:700; letter-spacing:0.07em; color:{TXT2}; }}
+    .verdict .ans {{ font-family:'Bungee',cursive; font-size:1.9rem; margin:0.25rem 0 0.55rem; }}
     .v-before .ans {{ color:{PINK}; }}
     .v-after .ans {{ color:{ORANGE}; }}
-    .verdict p {{ margin:0; color:#e6d6c4; }}
+    .verdict p {{ margin:0; color:#cbd5e1; }}
 
     /* ---- Result banner ---- */
     .winner {{
-        background:linear-gradient(135deg, rgba(247,147,26,0.16), rgba(255,170,70,0.12));
-        border:1px solid {ORANGE}; border-radius:18px; padding:1.2rem 1.4rem; margin-bottom:0.6rem;
+        background:linear-gradient(135deg, rgba(247,147,26,0.13), rgba(247,147,26,0.03));
+        border:1px solid rgba(247,147,26,0.5); border-radius:16px;
+        padding:1.2rem 1.4rem; margin-bottom:0.6rem;
     }}
-    .winner h2 {{ margin:0; }}
-    .winner p {{ margin:0.3rem 0 0; color:#ffe9cf; }}
+    .winner h2 {{ margin:0; color:#ffffff; }}
+    .winner p {{ margin:0.35rem 0 0; color:#e2e8f0; }}
 
     /* ---- The public code ---- */
-    .codebox {{ font-family:'Poppins',monospace; font-size:0.98rem; word-break:break-all;
-               background:{INK}; color:{ORANGE}; padding:1rem 1.1rem; border-radius:12px;
-               border:1px solid {ORANGE}; line-height:1.5; }}
+    .codebox {{ font-family:'Poppins',monospace; font-size:0.95rem; word-break:break-all;
+               background:#0b0d12; color:{ORANGE}; padding:1rem 1.1rem; border-radius:12px;
+               border:1px solid {BORDER}; line-height:1.5; }}
 
-    /* ---- Big party button ---- */
+    /* ---- Primary button ---- */
     div.stButton > button[kind="primary"] {{
-        background:linear-gradient(135deg, #ffb24d, {ORANGE} 55%, #c2660a);
-        color:#2a1505; font-family:'Bungee',cursive; font-size:1.3rem; border:0;
-        padding:0.85rem 1rem; border-radius:16px; letter-spacing:0.03em;
-        box-shadow:0 10px 30px rgba(247,147,26,0.40); transition:transform .08s ease;
+        background:linear-gradient(135deg, #ffb24d, {ORANGE});
+        color:#1a1a1a; font-family:'Bungee',cursive; font-size:1.25rem; border:0;
+        padding:0.85rem 1rem; border-radius:14px; letter-spacing:0.02em;
+        box-shadow:0 8px 24px rgba(247,147,26,0.30);
+        transition:transform .08s ease, filter .08s ease;
     }}
-    div.stButton > button[kind="primary"]:hover {{ transform:scale(1.015); filter:brightness(1.06); }}
+    div.stButton > button[kind="primary"]:hover {{ transform:translateY(-1px); filter:brightness(1.05); }}
     </style>
     """,
     unsafe_allow_html=True,
@@ -190,18 +194,18 @@ def _render_network(G, pos, title):
         edge_x += [pos[a][0], pos[b][0], None]
         edge_y += [pos[a][1], pos[b][1], None]
     edge_trace = go.Scatter(x=edge_x, y=edge_y, mode="lines",
-                            line=dict(width=1.5, color="#5a4326"), hoverinfo="none")
+                            line=dict(width=1.5, color="#39414e"), hoverinfo="none")
     nx_, ny_, text, colors, sizes = [], [], [], [], []
     for n, d in G.nodes(data=True):
         nx_.append(pos[n][0]); ny_.append(pos[n][1])
         text.append(d.get("display", n)); colors.append(color_map.get(d.get("kind"), "#ccc"))
         sizes.append(40 if d.get("kind") == "mix" else 24)
     node_trace = go.Scatter(x=nx_, y=ny_, mode="markers+text", text=text,
-                            textposition="bottom center", textfont=dict(size=12, color="#f0e2cf"),
+                            textposition="bottom center", textfont=dict(size=12, color="#cfd5de"),
                             marker=dict(size=sizes, color=colors, line=dict(width=1.5, color=INK)),
                             hoverinfo="text")
     fig = go.Figure(data=[edge_trace, node_trace])
-    fig.update_layout(title=dict(text=title, font=dict(size=15, color="#f0e2cf")),
+    fig.update_layout(title=dict(text=title, font=dict(size=15, color="#cfd5de")),
                       showlegend=False, margin=dict(l=10, r=10, t=42, b=10), height=380,
                       xaxis=dict(visible=False, range=[-0.4, 2.7]),
                       yaxis=dict(visible=False, range=[-0.3, 1.2]),
@@ -259,20 +263,21 @@ def sankey_flow(result):
                   line=dict(color=INK, width=0.5)),
         link=dict(source=src, target=tgt, value=val, color="rgba(247,147,26,0.22)")))
     fig.update_layout(height=420, margin=dict(l=10, r=10, t=10, b=10),
-                      paper_bgcolor="rgba(0,0,0,0)", font=dict(color="#f0e2cf"))
+                      paper_bgcolor="rgba(0,0,0,0)", font=dict(color="#cfd5de"))
     return fig
 
 
 def invisibility_meter(score):
     fig = go.Figure(go.Indicator(
         mode="gauge+number", value=score, number=dict(suffix="%", font=dict(size=40, color=ORANGE)),
-        gauge=dict(axis=dict(range=[0, 100], tickcolor="#b29a7e"),
+        gauge=dict(axis=dict(range=[0, 100], tickcolor="#9aa3b2"),
                    bar=dict(color=ORANGE),
-                   steps=[dict(range=[0, 40], color="rgba(194,102,10,0.30)"),
-                          dict(range=[40, 70], color="rgba(255,178,77,0.28)"),
-                          dict(range=[70, 100], color="rgba(247,147,26,0.30)")])))
+                   bordercolor="rgba(0,0,0,0)",
+                   steps=[dict(range=[0, 40], color="rgba(139,147,163,0.18)"),
+                          dict(range=[40, 70], color="rgba(255,178,77,0.22)"),
+                          dict(range=[70, 100], color="rgba(247,147,26,0.28)")])))
     fig.update_layout(height=230, margin=dict(l=20, r=20, t=10, b=10),
-                      paper_bgcolor="rgba(0,0,0,0)", font=dict(color="#f0e2cf"))
+                      paper_bgcolor="rgba(0,0,0,0)", font=dict(color="#cfd5de"))
     return fig
 
 

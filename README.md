@@ -64,8 +64,6 @@ That's it — you'll get a public `*.streamlit.app` URL to share.
 
 ## What is Shielded CSV? (the foundation)
 
-![Shielded CSV explainer](docs/shielded-csv-explainer.png)
-
 Normally, Bitcoin announces **every** payment to the whole world and stores it
 forever — no privacy, and the ledger only grows. **Shielded CSV** flips that
 around, in three pieces:
