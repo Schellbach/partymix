@@ -1,6 +1,9 @@
+_This project was built for the 4hr cursor miami hackathon at the dock: https://www.cursormiami.com/_
+
 # Party Mix
 
 **Mix together. Stay private. Limit fees.**
+
 
 [![Live demo](https://img.shields.io/badge/Live%20demo-Open%20app-00e0a4?logo=streamlit&logoColor=white)](https://partymix-cbu5hjo8qcvn8nayck9a2w.streamlit.app/)
 [![Status](https://img.shields.io/badge/status-educational%20demo-8b5cff)](#disclaimer)
