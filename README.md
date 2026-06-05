@@ -63,6 +63,28 @@ That's it — you'll get a public `*.streamlit.app` URL to share.
    - The merged shared payment record
    - Download buttons for every CSV
 
+## What is Shielded CSV? (the foundation)
+
+![Shielded CSV explainer](docs/shielded-csv-explainer.png)
+
+Normally, Bitcoin announces **every** payment to the whole world and stores it
+forever — no privacy, and the ledger only grows. **Shielded CSV** flips that
+around, in three pieces:
+
+1. **Pay off the public record** — you hand the coin and a small proof *directly*
+   to the person you're paying. Amounts, names, and history never touch the chain.
+2. **Leave one tiny mark** — the only thing posted to Bitcoin is a 64-byte code
+   called a **nullifier**. It looks like random noise and just means "this coin is
+   now used," so it can't be spent twice.
+3. **A proof that never grows** — a **zero-knowledge proof** travels with the coin,
+   proving it's real without revealing where it's been, and it stays tiny no matter
+   how old the coin is (thanks to *Proof-Carrying Data*).
+
+The result: real privacy and ~100+ payments per second, all on top of Bitcoin
+with no fork needed. Based on
+[Shielded CSV (Nick, Eagen, Linus, 2025)](https://eprint.iacr.org/2025/068) and the
+[Blockstream explainer](https://blog.blockstream.com/bitcoins-shielded-csv-protocol-explained/).
+
 ## The novel idea, in plain words
 
 Normally **every spend leaves its own trail** on Bitcoin — anyone can follow the

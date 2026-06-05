@@ -317,14 +317,92 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# The single clearest explanation: the hat-of-cash analogy.
+# =========================================================================
+# EXPLAINER 1 -- What is Shielded CSV? (the foundation everything sits on)
+# =========================================================================
+st.markdown("### First, the big idea: Shielded CSV")
+st.caption("Normally, Bitcoin announces every payment to the whole world, forever. "
+           "Shielded CSV lets you pay quietly instead. Here's how, in three pieces:")
+
+csv_cards = st.columns(3)
+csv_steps = [
+    (ORANGE, "Pay off the public record",
+     "You hand the coin and a little proof <i>directly</i> to the person you're "
+     "paying. The amount, the names, and the coin's history never touch the public "
+     "blockchain."),
+    (PURPLE, "Leave one tiny mark",
+     "The only thing posted to Bitcoin is a 64-byte code called a <b>nullifier</b>. "
+     "It looks like random noise and means just one thing: &ldquo;this coin is now "
+     "used,&rdquo; so it can't be spent twice."),
+    (TEAL, "A proof that never grows",
+     "A <b>zero-knowledge proof</b> travels with the coin and proves it's real "
+     "without showing where it's been &mdash; and it stays tiny no matter how many "
+     "times the coin changed hands."),
+]
+for col, (c, t, b) in zip(csv_cards, csv_steps):
+    col.markdown(
+        f"<div class='step'><div class='ic' style='background:{c}'>&#10003;</div>"
+        f"<h4>{t}</h4><p>{b}</p></div>",
+        unsafe_allow_html=True,
+    )
+
+st.write("")
+
+nb, sc = st.columns(2)
+nb.markdown(
+    """<div class="verdict v-before"><div class="lbl">NORMAL BITCOIN</div>
+    <div class="ans" style="font-size:1.4rem">Loud &amp; public</div>
+    <p>Every payment is shouted to everyone and stored forever. No privacy, an
+    ever-growing ledger, and only about <b>11 payments per second</b>.</p></div>""",
+    unsafe_allow_html=True,
+)
+sc.markdown(
+    """<div class="verdict v-after"><div class="lbl">SHIELDED CSV</div>
+    <div class="ans" style="font-size:1.4rem">Quiet &amp; private</div>
+    <p>Only a single 64-byte code goes public, and it reveals nothing. Real privacy,
+    a tiny footprint, and room for <b>100+ payments per second</b> &mdash; all on top
+    of Bitcoin, with no fork needed.</p></div>""",
+    unsafe_allow_html=True,
+)
+
+with st.expander("Crypto words, in plain English"):
+    st.markdown(
+        """
+- **Nullifier** &mdash; the 64-byte code posted on Bitcoin. It just marks a coin as
+  spent (to stop double-spending) and reveals nothing else.
+- **Client-Side Validation (CSV)** &mdash; instead of the *whole network* checking
+  every payment, only the person being paid checks that their coin is valid.
+- **Zero-knowledge proof** &mdash; a way to prove something is true (&ldquo;this coin
+  is real and unspent&rdquo;) without revealing any of the details.
+- **Proof-Carrying Data (PCD)** &mdash; the trick that keeps that proof small and fast
+  forever, no matter how long the coin's history gets.
+- **Account** &mdash; your wallet's running state. Spending posts just *one* nullifier
+  for the whole payment, instead of one per coin.
+- **Spent accumulator** &mdash; a compact running list that proves you haven't already
+  spent a coin.
+
+*Based on [Shielded CSV (Nick, Eagen, Linus, 2025)](https://eprint.iacr.org/2025/068)
+and the [Blockstream explainer](https://blog.blockstream.com/bitcoins-shielded-csv-protocol-explained/).*
+        """
+    )
+
+st.write("")
+
+# =========================================================================
+# EXPLAINER 2 -- What is Party Mix? (an application built on Shielded CSV)
+# =========================================================================
+st.markdown("### So what's Party Mix?")
+st.caption("Shielded CSV hides your payment from the public. Party Mix is a fun party "
+           "you throw on top of it that hides you from everyone &mdash; even your friends.")
+
 st.markdown(
     """
     <div class="analogy">
       🎩 <b>Think of it like this:</b> everyone tosses the same kind of cash into a hat,
       gives it a shake, and each person takes the same amount back out. You still have
       your money &mdash; but <b>nobody can tell which bill was originally yours.</b>
-      Party Mix does that with Bitcoin.
+      Party Mix does that with Bitcoin, and posts just <b>one</b> shared 64-byte code
+      for the whole group.
     </div>
     """,
     unsafe_allow_html=True,
@@ -332,7 +410,7 @@ st.markdown(
 
 st.write("")
 
-# Three dead-simple steps.
+# Three dead-simple party steps.
 cols = st.columns(3)
 steps = [
     (ORANGE, "1", "Everyone brings coins", "A handful of friends show up, each with some Bitcoin."),
@@ -462,10 +540,12 @@ if result is not None:
         st.plotly_chart(sankey_flow(result), use_container_width=True,
                         config={"displayModeBar": False})
 
-        st.markdown("**The one thing the whole world sees** — a single 64-byte code:")
+        st.markdown("**The one thing the whole world sees** — a single 64-byte "
+                    "*nullifier*, the only data Shielded CSV posts to Bitcoin:")
         st.markdown(f"<div class='codebox'>{result.aggregate_nullifier}</div>",
                     unsafe_allow_html=True)
-        st.caption("No names, no amounts, no balances. Just this.")
+        st.caption("No names, no amounts, no balances, no history — just this random-"
+                   "looking code that says \u201cthese coins are now spent.\u201d")
         if st.button("Publish to mock Bitcoin"):
             log, shown = st.empty(), []
             for line in result.onchain_log:
