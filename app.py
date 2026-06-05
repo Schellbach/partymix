@@ -567,19 +567,18 @@ st.caption("Educational demo only — the cryptography is faked with random text
 # ===========================================================================
 # README -- how to run + the idea, in plain words
 # ===========================================================================
-"""
-PARTY MIX -- README
-
-HOW TO RUN
-    pip install -r requirements.txt
-    streamlit run app.py
-Then open the URL Streamlit prints (usually http://localhost:8501).
-
-THE IDEA, IN PLAIN WORDS
-Normally, every Bitcoin payment leaves its own public trail -- anyone can follow
-the money. Party Mix gathers a group of people, throws all their coins into one
-shared pile, shuffles it, and hands everyone fresh coins back. The only thing
-posted publicly is a single tiny 64-byte code. Result: cheaper (one code instead
-of many) and far more private (no one can tell who paid whom). It's a CoinJoin-
-style mixer, reimagined on top of the Shielded CSV idea.
-"""
+# (Kept as a comment, not a bare string, so Streamlit's "magic" doesn't render
+# it in the app. The full README lives in README.md.)
+#
+# HOW TO RUN
+#     pip install -r requirements.txt
+#     streamlit run app.py
+# Then open the URL Streamlit prints (usually http://localhost:8501).
+#
+# THE IDEA, IN PLAIN WORDS
+# Normally, every Bitcoin payment leaves its own public trail -- anyone can follow
+# the money. Party Mix gathers a group of people, throws all their coins into one
+# shared pile, shuffles it, and hands everyone fresh coins back. The only thing
+# posted publicly is a single tiny 64-byte code. Result: cheaper (one code instead
+# of many) and far more private (no one can tell who paid whom). It's a CoinJoin-
+# style mixer, reimagined on top of the Shielded CSV idea.
