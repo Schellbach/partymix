@@ -51,8 +51,7 @@ That's it — you'll get a public `*.streamlit.app` URL to share.
 
 ## How to use it
 
-1. **Make a party** — in the sidebar, generate 3–8 mock guests, or drag & drop
-   your own guest CSVs.
+1. **Make a party** — in the sidebar, choose how many guests come and generate them.
 2. **Pick decoys** — more decoy coins = a bigger crowd to hide in.
 3. **Click "Mix the party"** — watch the mixing animation.
 4. **Explore the dashboard:**

@@ -19,7 +19,6 @@ import time
 from pathlib import Path
 
 import networkx as nx
-import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
@@ -177,21 +176,6 @@ with st.sidebar:
         st.session_state.party = mixer.generate_party(num_participants, coins_per_user)
         st.session_state.result = None
         st.toast("Guests invited!", icon="🎈")
-
-    with st.expander("Bring your own CSVs"):
-        uploads = st.file_uploader("Drop guest CSV files", type=["csv"],
-                                   accept_multiple_files=True)
-        if uploads:
-            loaded = {}
-            for up in uploads:
-                try:
-                    loaded[up.name.replace(".csv", "")] = pd.read_csv(up)
-                except Exception as exc:  # noqa: BLE001
-                    st.error(f"Couldn't read {up.name}: {exc}")
-            if loaded:
-                st.session_state.party = loaded
-                st.session_state.result = None
-                st.success(f"Loaded {len(loaded)} file(s).")
 
     st.caption("The party is private. No one knows who brought what.")
 
