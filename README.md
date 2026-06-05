@@ -17,7 +17,7 @@ It's a CoinJoin-style mixer reimagined on top of the **Shielded CSV** idea
 
 ![Party Mix hero](docs/hero.png)
 
-![Coin flow through the shared mix](docs/coinflow.png)
+![Could a nosy stranger follow your money? Before vs after](docs/results.png)
 
 > ### Disclaimer
 > ⚠️ **Educational demo only.** All "cryptography" is faked with random text so
