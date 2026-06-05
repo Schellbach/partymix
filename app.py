@@ -14,7 +14,9 @@ This is an educational toy. The "cryptography" is faked with random text so the
 ideas stay simple. See the README section at the bottom of this file.
 """
 
+import base64
 import time
+from pathlib import Path
 
 import networkx as nx
 import pandas as pd
@@ -22,6 +24,16 @@ import plotly.graph_objects as go
 import streamlit as st
 
 import mixer
+
+
+@st.cache_data(show_spinner=False)
+def img_data_uri(path: str) -> str:
+    """Read a local image and return a base64 data URI so it can be embedded
+    directly inside our custom HTML hero (Streamlit can't serve raw file paths)."""
+    p = Path(path)
+    if not p.exists():
+        return ""
+    return "data:image/png;base64," + base64.b64encode(p.read_bytes()).decode()
 
 # ---------------------------------------------------------------------------
 # Page setup
@@ -62,6 +74,11 @@ st.markdown(
         display:flex; align-items:center; justify-content:center;
         box-shadow:0 0 42px rgba(247,147,26,0.65);
     }}
+    .bowl {{
+        width:150px; height:150px; border-radius:50%; object-fit:cover; flex:0 0 auto;
+        border:3px solid {ORANGE}; box-shadow:0 0 46px rgba(247,147,26,0.55);
+    }}
+    @media (max-width: 640px) {{ .bowl {{ width:110px; height:110px; }} }}
     .wordmark {{
         font-family:'Bungee', cursive; font-size:clamp(2.8rem, 7vw, 4.6rem);
         line-height:0.95; margin:0;
@@ -276,13 +293,19 @@ def invisibility_meter(score):
 
 
 # ---------------------------------------------------------------------------
-# HERO -- big PARTY MIX wordmark
+# HERO -- big PARTY MIX wordmark + a real bowl of party mix
 # ---------------------------------------------------------------------------
+_bowl = img_data_uri("docs/partymix-bowl.png")
+hero_visual = (
+    f'<img class="bowl" src="{_bowl}" alt="A bowl of party mix" />'
+    if _bowl
+    else '<div class="coin">&#8383;</div>'
+)
 st.markdown(
-    """
+    f"""
     <div class="hero">
       <div class="brand">
-        <div class="coin">&#8383;</div>
+        {hero_visual}
         <div>
           <h1 class="wordmark">PARTY MIX</h1>
           <p class="tagline">Mix your Bitcoin with the crowd, so no one can follow your money.</p>
