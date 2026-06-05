@@ -1,17 +1,29 @@
-# 🎉 Shielded CSV Party Mix
+# Party Mix
 
-**Throw a coin party. Leave with privacy.**
+**Pay together. Stay private. Save fees.**
 
-A fun, beginner-friendly Streamlit demo that shows how a group of people can pool
-their Bitcoin coins, make **one** shared private transaction, and have the
-outside world see only a single tiny **64-byte fingerprint** — not who brought
-what, how much, or who took home what.
+[![Live demo](https://img.shields.io/badge/Live%20demo-Open%20app-00e0a4?logo=streamlit&logoColor=white)](https://partymix-cbu5hjo8qcvn8nayck9a2w.streamlit.app/)
+[![Status](https://img.shields.io/badge/status-educational%20demo-8b5cff)](#disclaimer)
+
+A fun, beginner-friendly Streamlit app that shows how a group of people can pool
+their Bitcoin coins, make **one** shared private payment, and have the outside
+world see only a single tiny **64-byte code** — not who brought what, how much,
+or who took home what.
 
 It's a CoinJoin-style mixer reimagined on top of the **Shielded CSV** idea
 (private, efficient Client-Side Validation).
 
-> ⚠️ Educational toy. All "cryptography" is faked with random hex so the *ideas*
-> stay front and center. No real Bitcoin, no real proofs.
+**▶️ Try it live: <https://partymix-cbu5hjo8qcvn8nayck9a2w.streamlit.app/>**
+
+![Party Mix hero](docs/hero.png)
+
+![Coin flow through the shared mix](docs/coinflow.png)
+
+> ### Disclaimer
+> ⚠️ **Educational demo only.** All "cryptography" is faked with random text so
+> the *ideas* stay front and center. This handles **no real Bitcoin** and is
+> **not safe for real money**. See [ROADMAP.md](ROADMAP.md) for what it would
+> take to make this real.
 
 ---
 
@@ -42,12 +54,13 @@ That's it — you'll get a public `*.streamlit.app` URL to share.
 1. **Make a party** — in the sidebar, generate 3–8 mock guests, or drag & drop
    your own guest CSVs.
 2. **Pick decoys** — more decoy coins = a bigger crowd to hide in.
-3. **Click `✨ MIX THE PARTY ✨`** — watch the zk magic + aggregation animation.
+3. **Click "Mix the party"** — watch the mixing animation.
 4. **Explore the dashboard:**
-   - Before vs After transaction graphs (with a privacy toggle)
+   - A clear **before vs after** comparison and a privacy-score gauge
+   - Before/after transaction graphs (with a privacy toggle)
    - Coin-flow Sankey diagram
-   - The "on-chain view" (just the 64-byte fingerprint)
-   - The merged Joint Shielded CSV
+   - The "public view" (just the 64-byte code)
+   - The merged shared payment record
    - Download buttons for every CSV
 
 ## The novel idea, in plain words
@@ -76,6 +89,8 @@ on-chain footprint.
 | `app.py` | Streamlit UI, visualizations, and an inline README section |
 | `mixer.py` | Core simulation: mock data, the party-mix logic, privacy metrics |
 | `requirements.txt` | Python dependencies |
+| `ROADMAP.md` | What it would take to go from demo to real coins |
+| `docs/` | Screenshots used in this README |
 
 ## The (fake) data model
 
